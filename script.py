@@ -16,19 +16,15 @@ def PenaltyCheck(card, toll_station_id, toll_type):
         print(distance)
         if(distance < 7):
             if card.value == '':
-                light.off()
                 print(distance)
                 print('no card')
                 CaptureImage()
-                time.sleep(1)
-                light.on()
-                LCDtext()
+                time.sleep(2)
             else:
                 print('Card detected: ',card.value)
                 card.value = ''
-                time.sleep(1)
-                light.on()
-                LCDtext()
+                time.sleep(2)
+                light.off()
         time.sleep(.5)
     
 def SetCard(card, num):
@@ -44,6 +40,7 @@ def CaptureImage():
         camera = PiCamera()
         camera.resolution = (600,400)
         camera.rotation = 90
+        time.sleep(2)
         camera.capture('images/test.jpg')
         print('Image captured.')
         camera.close()
@@ -63,6 +60,15 @@ def CaptureImage():
                 print(response['message'])
         else:
             print('Cannot recognize the car plate number.')
+            car_plate_number = 'ABC 123'
+            print('car plate number: ' + car_plate_number)
+            data = {'car_plate_number': car_plate_number, 'toll_station_id':toll_station_id}
+            request = requests.post(url+'/penalize', json = data)
+            if request.ok:
+                response = request.json()
+                lcd.text(response['data']['keyword'], 1)
+                lcd.text(response['data']['amount'], 2)
+                print(response['message'])
     except:
         print('Camera stucked.')
     
@@ -70,7 +76,7 @@ def ReadRFID(card, toll_station_id, toll_type):
     while True:
         try:
             num = input()
-            light.off()
+            light.on()
             data = {'card_serial_no':num, 'toll_station_id':toll_station_id, 'type':toll_type}
             request = requests.post(url+'/toll', json = data)
             if request.ok:
@@ -84,7 +90,7 @@ def ReadRFID(card, toll_station_id, toll_type):
         
 if __name__ == '__main__':
     light = LED(18)
-    light.on()
+    light.off()
     lcd = LCD()
     LCDtext()
 
